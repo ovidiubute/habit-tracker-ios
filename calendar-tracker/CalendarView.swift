@@ -8,31 +8,49 @@ struct CalendarView: View {
     private let dateFormatter = DateFormatter()
     
     var body: some View {
-        VStack(spacing: 30) {
-            // Header with month/year
+        VStack(spacing: 20) {
+            // Header with month/year - FIXED
             HStack {
+                Button(action: { changeMonth(-1) }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                
+                Spacer()
+                
                 Text(monthYearString)
                     .font(.title2)
                     .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
                 Spacer()
+                
+                Button(action: { changeMonth(1) }) {
+                    Image(systemName: "chevron.right")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
             
             // Days of week header
             HStack {
                 ForEach(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], id: \.self) { day in
                     Text(day)
                         .font(.caption)
-                        .fontWeight(.medium)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
             
             // Calendar grid
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                ForEach(calendarDays, id: \.self) { date in
-                    if let date = date {
+                ForEach(calendarDays.indices, id: \.self) { index in
+                    if let date = calendarDays[index] {
                         CalendarDayView(date: date, storageManager: storageManager)
                     } else {
                         Rectangle()
@@ -41,17 +59,26 @@ struct CalendarView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
             
             Spacer()
         }
-        .navigationTitle("Calendar")
+        .navigationTitle("Day Tracker")
         .navigationBarTitleDisplayMode(.large)
     }
     
+    // FIXED: Properly format month and year
     private var monthYearString: String {
-        dateFormatter.dateFormat = "MMMM yyyy"
-        return dateFormatter.string(from: currentDate)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: currentDate)
+    }
+    
+    // Add month navigation function
+    private func changeMonth(_ value: Int) {
+        if let newDate = calendar.date(byAdding: .month, value: value, to: currentDate) {
+            currentDate = newDate
+        }
     }
     
     private var calendarDays: [Date?] {
@@ -65,7 +92,7 @@ struct CalendarView: View {
         
         let monthStart = monthInterval.start
         
-        // Find the first day of the calendar grid (start of week containing first day of month)
+        // Find the first day of the calendar (start of week containing first day of month)
         let firstWeekday = calendar.component(.weekday, from: monthStart)
         let daysFromPreviousMonth = firstWeekday - 1
         
@@ -81,14 +108,9 @@ struct CalendarView: View {
             if calendar.isDate(currentDay, equalTo: currentDate, toGranularity: .month) {
                 days.append(currentDay)
             } else {
-                days.append(nil) // Days from previous/next month (empty cells)
+                days.append(nil) // Days from previous/next month (empty spaces)
             }
-            
-            // Move to next day
-            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: currentDay) else {
-                break
-            }
-            currentDay = nextDay
+            currentDay = calendar.date(byAdding: .day, value: 1, to: currentDay) ?? currentDay
         }
         
         return days
@@ -107,85 +129,41 @@ struct CalendarDayView: View {
                 storageManager.toggleDateColor(for: date)
             }
         }) {
-            ZStack {
-                // Main circle background
-                Circle()
-                    .fill(backgroundColor)
-                    .frame(width: 40, height: 40)
-                
-                // Today indicator ring
-                if isToday {
-                    Circle()
-                        .stroke(todayRingColor, lineWidth: 3)
-                        .frame(width: 44, height: 44)
-                }
-                
-                // Date text
-                Text("\(calendar.component(.day, from: date))")
-                    .font(.system(size: 16, weight: isToday ? .bold : .medium))
-                    .foregroundColor(textColor)
-            }
+            Text("\(calendar.component(.day, from: date))")
+                .font(.system(size: 16, weight: .medium))
+                .frame(width: 40, height: 40)
+                .background(backgroundColor)
+                .foregroundColor(textColor)
+                .clipShape(Circle())
         }
         .disabled(!canInteract)
-        .scaleEffect(isToday ? 1.1 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isToday)
-    }
-    
-    private var isToday: Bool {
-        return calendar.isDate(date, inSameDayAs: Date())
     }
     
     private var canInteract: Bool {
-        return storageManager.canInteractWithDate(date) || isToday
+        return storageManager.canInteractWithDate(date)
     }
     
     private var backgroundColor: Color {
-        if isToday {
-            // Today's date has special styling
-            switch storageManager.getColorForDate(date) {
-            case .green:
-                return Color.green
-            case .red:
-                return Color.red
-            case .gray:
-                return Color.blue.opacity(0.8) // Special blue for today when unmarked
-            }
-        } else if !canInteract {
+        if !canInteract {
             return Color.gray.opacity(0.3)
-        } else {
-            // Past dates available for interaction
-            switch storageManager.getColorForDate(date) {
-            case .green:
-                return Color.green
-            case .red:
-                return Color.red
-            case .gray:
-                return Color.gray.opacity(0.6) // Available but not yet marked
-            }
+        }
+        
+        switch storageManager.getColorForDate(date) {
+        case .green:
+            return Color.green
+        case .red:
+            return Color.red
+        case .gray:
+            return Color.gray.opacity(0.6) // Available but not yet marked
         }
     }
     
     private var textColor: Color {
-        if isToday {
-            return Color.white
-        }
-        
         switch storageManager.getColorForDate(date) {
         case .green, .red:
             return Color.white
         case .gray:
             return canInteract ? Color.white : Color.gray
-        }
-    }
-    
-    private var todayRingColor: Color {
-        switch storageManager.getColorForDate(date) {
-        case .green:
-            return Color.green.opacity(0.7)
-        case .red:
-            return Color.red.opacity(0.7)
-        case .gray:
-            return Color.blue
         }
     }
 }
