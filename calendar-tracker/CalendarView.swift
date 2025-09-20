@@ -8,7 +8,7 @@ struct CalendarView: View {
     private let dateFormatter = DateFormatter()
     
     var body: some View {
-        VStack {
+        VStack(spacing: 30) {
             // Header with month/year
             HStack {
                 Text(monthYearString)
@@ -107,41 +107,85 @@ struct CalendarDayView: View {
                 storageManager.toggleDateColor(for: date)
             }
         }) {
-            Text("\(calendar.component(.day, from: date))")
-                .font(.system(size: 16, weight: .medium))
-                .frame(width: 40, height: 40)
-                .background(backgroundColor)
-                .foregroundColor(textColor)
-                .clipShape(Circle())
+            ZStack {
+                // Main circle background
+                Circle()
+                    .fill(backgroundColor)
+                    .frame(width: 40, height: 40)
+                
+                // Today indicator ring
+                if isToday {
+                    Circle()
+                        .stroke(todayRingColor, lineWidth: 3)
+                        .frame(width: 44, height: 44)
+                }
+                
+                // Date text
+                Text("\(calendar.component(.day, from: date))")
+                    .font(.system(size: 16, weight: isToday ? .bold : .medium))
+                    .foregroundColor(textColor)
+            }
         }
         .disabled(!canInteract)
+        .scaleEffect(isToday ? 1.1 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isToday)
+    }
+    
+    private var isToday: Bool {
+        return calendar.isDate(date, inSameDayAs: Date())
     }
     
     private var canInteract: Bool {
-        return storageManager.canInteractWithDate(date)
+        return storageManager.canInteractWithDate(date) || isToday
     }
     
     private var backgroundColor: Color {
-        if !canInteract {
+        if isToday {
+            // Today's date has special styling
+            switch storageManager.getColorForDate(date) {
+            case .green:
+                return Color.green
+            case .red:
+                return Color.red
+            case .gray:
+                return Color.blue.opacity(0.8) // Special blue for today when unmarked
+            }
+        } else if !canInteract {
             return Color.gray.opacity(0.3)
-        }
-        
-        switch storageManager.getColorForDate(date) {
-        case .green:
-            return Color.green
-        case .red:
-            return Color.red
-        case .gray:
-            return Color.gray.opacity(0.6) // Available but not yet marked
+        } else {
+            // Past dates available for interaction
+            switch storageManager.getColorForDate(date) {
+            case .green:
+                return Color.green
+            case .red:
+                return Color.red
+            case .gray:
+                return Color.gray.opacity(0.6) // Available but not yet marked
+            }
         }
     }
     
     private var textColor: Color {
+        if isToday {
+            return Color.white
+        }
+        
         switch storageManager.getColorForDate(date) {
         case .green, .red:
             return Color.white
         case .gray:
             return canInteract ? Color.white : Color.gray
+        }
+    }
+    
+    private var todayRingColor: Color {
+        switch storageManager.getColorForDate(date) {
+        case .green:
+            return Color.green.opacity(0.7)
+        case .red:
+            return Color.red.opacity(0.7)
+        case .gray:
+            return Color.blue
         }
     }
 }
