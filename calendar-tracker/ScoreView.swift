@@ -4,11 +4,7 @@ struct ScoreView: View {
     @StateObject private var storageManager = DateStorageManager.shared
     
     var body: some View {
-        VStack(spacing: 30) {
-            Text("Your Score")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
+        VStack(spacing: 30) {            
             // Score display
             VStack(spacing: 10) {
                 Text("\(scorePercentage)%")
@@ -117,4 +113,9 @@ struct ScoreView: View {
             return .red
         }
     }
+}
+
+// A SwiftUI preview.
+#Preview {
+    ScoreView()
 }
