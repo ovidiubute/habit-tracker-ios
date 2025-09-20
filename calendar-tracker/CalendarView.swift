@@ -3,13 +3,15 @@ import SwiftUI
 struct CalendarView: View {
     @StateObject private var storageManager = DateStorageManager.shared
     @State private var currentDate = Date()
+    @State private var dragOffset = CGSize.zero
+    @State private var isAnimating = false
     
     private let calendar = Calendar.current
     private let dateFormatter = DateFormatter()
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Header with month/year - FIXED
+        VStack {
+            // Header with navigation buttons and month/year
             HStack {
                 Button(action: { changeMonth(-1) }) {
                     Image(systemName: "chevron.left")
@@ -22,7 +24,6 @@ struct CalendarView: View {
                 Text(monthYearString)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.primary)
                 
                 Spacer()
                 
@@ -32,25 +33,24 @@ struct CalendarView: View {
                         .foregroundColor(.blue)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
+            .padding(.horizontal)
             
             // Days of week header
             HStack {
                 ForEach(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], id: \.self) { day in
                     Text(day)
                         .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal)
+            .padding(.top, 10)
             
-            // Calendar grid
+            // Calendar grid with swipe gesture
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                ForEach(calendarDays.indices, id: \.self) { index in
-                    if let date = calendarDays[index] {
+                ForEach(calendarDays, id: \.self) { date in
+                    if let date = date {
                         CalendarDayView(date: date, storageManager: storageManager)
                     } else {
                         Rectangle()
@@ -59,30 +59,67 @@ struct CalendarView: View {
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal)
+            .offset(x: dragOffset.width)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: currentDate)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if !isAnimating {
+                            dragOffset = value.translation
+                        }
+                    }
+                    .onEnded { value in
+                        if !isAnimating {
+                            let threshold: CGFloat = 50
+                            
+                            if value.translation.width > threshold {
+                                // Swipe right - go to previous month
+                                changeMonth(-1)
+                            } else if value.translation.width < -threshold {
+                                // Swipe left - go to next month
+                                changeMonth(1)
+                            }
+                            
+                            // Reset drag offset
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                dragOffset = .zero
+                            }
+                        }
+                    }
+            )
             
             Spacer()
         }
-        .navigationTitle("Day Tracker")
+        .navigationTitle("Calendar")
         .navigationBarTitleDisplayMode(.large)
     }
     
-    // FIXED: Properly format month and year
     private var monthYearString: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: currentDate)
+        dateFormatter.dateFormat = "MMMM yyyy"
+        return dateFormatter.string(from: currentDate)
     }
     
-    // Add month navigation function
     private func changeMonth(_ value: Int) {
-        if let newDate = calendar.date(byAdding: .month, value: value, to: currentDate) {
-            currentDate = newDate
+        guard !isAnimating else { return }
+        
+        isAnimating = true
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            if let newDate = calendar.date(byAdding: .month, value: value, to: currentDate) {
+                currentDate = newDate
+            }
+        }
+        
+        // Reset animation flag after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            isAnimating = false
         }
     }
     
     private var calendarDays: [Date?] {
-        return generateCalendarDays()
+        generateCalendarDays()
     }
     
     private func generateCalendarDays() -> [Date?] {
@@ -108,7 +145,7 @@ struct CalendarView: View {
             if calendar.isDate(currentDay, equalTo: currentDate, toGranularity: .month) {
                 days.append(currentDay)
             } else {
-                days.append(nil) // Days from previous/next month (empty spaces)
+                days.append(nil) // Days from previous/next month
             }
             currentDay = calendar.date(byAdding: .day, value: 1, to: currentDay) ?? currentDay
         }
@@ -165,11 +202,5 @@ struct CalendarDayView: View {
         case .gray:
             return canInteract ? Color.white : Color.gray
         }
-    }
-}
-
-#Preview {
-    NavigationView {
-        CalendarView()
     }
 }
