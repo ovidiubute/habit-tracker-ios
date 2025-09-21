@@ -33,7 +33,7 @@ Track your good and bad days at a glance using a simple color-coded calendar and
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/habit-tracker-ios.git
+   git clone https://github.com/ovidiubute/habit-tracker-ios.git
    cd habit-tracker-ios
 
 2.	Open the project in Xcode:
