@@ -17,13 +17,7 @@ struct ScoreView: View {
             }
             
             // Statistics
-            VStack(spacing: 16) {
-                HStack {
-                    Label("\(totalAvailableDays)", systemImage: "calendar")
-                    Spacer()
-                    Text("Days Available")
-                }
-                
+            VStack(spacing: 16) {                
                 HStack {
                     Label("\(totalMarkedDays)", systemImage: "hand.tap.fill")
                     Spacer()
