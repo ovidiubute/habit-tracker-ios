@@ -76,20 +76,20 @@ class DateStorageManager: ObservableObject {
     // Check if a date is available for interaction
     func canInteractWithDate(_ date: Date) -> Bool {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let installDate = calendar.startOfDay(for: self.installDate)
-        let dateToCheck = calendar.startOfDay(for: date)
+        let today = Date()
+        let installDate = self.installDate
         
-        // Can't interact with future dates (including today)
-        if dateToCheck > today {
+        // Can't interact with future dates (but CAN interact with today)
+        if date > today {
             return false
         }
         
         // Can't interact with dates before install date
-        if dateToCheck < installDate {
+        if date < calendar.startOfDay(for: installDate) {
             return false
         }
         
+        // Can interact with dates from install date up to and INCLUDING today
         return true
     }
     

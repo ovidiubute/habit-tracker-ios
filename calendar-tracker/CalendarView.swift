@@ -173,9 +173,18 @@ struct CalendarDayView: View {
                 .frame(width: 40, height: 40)
                 .background(backgroundColor)
                 .foregroundColor(textColor)
+                .overlay(
+                    // Blue border for today
+                    Circle()
+                        .stroke(isToday ? Color.blue : Color.clear, lineWidth: 2)
+                )
                 .clipShape(Circle())
         }
         .disabled(!canInteract)
+    }
+    
+    private var isToday: Bool {
+        return calendar.isDateInToday(date)
     }
     
     private var canInteract: Bool {
