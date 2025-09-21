@@ -11,6 +11,8 @@ struct CalendarView: View {
     
     var body: some View {
         VStack {
+            Spacer()
+            
             // Header with navigation buttons and month/year
             HStack {
                 Button(action: { changeMonth(-1) }) {
@@ -203,4 +205,8 @@ struct CalendarDayView: View {
             return canInteract ? Color.white : Color.gray
         }
     }
+}
+
+#Preview {
+    CalendarView()
 }

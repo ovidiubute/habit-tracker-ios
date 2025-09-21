@@ -4,7 +4,7 @@ struct ScoreView: View {
     @StateObject private var storageManager = DateStorageManager.shared
     
     var body: some View {
-        VStack(spacing: 30) {            
+        VStack(spacing: 30) {
             // Score display
             VStack(spacing: 10) {
                 Text("\(scorePercentage)%")
