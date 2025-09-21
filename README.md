@@ -39,7 +39,7 @@ Track your good and bad days at a glance using a simple color-coded calendar and
 2.	Open the project in Xcode:
 
     ```bash
-    open HabitTracker.xcodeproj
+    open calendar-tracker.xcodeproj
     ```
 
 3.	Build and run the app on a simulator or physical device.
