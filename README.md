@@ -34,7 +34,7 @@ Track your good and bad days at a glance using a simple color-coded calendar and
 1. Clone the repository:
    ```bash
    git clone https://github.com/ovidiubute/habit-tracker-ios.git
-   cd habit-tracker-ios
+   cd calendar-tracker
 
 2.	Open the project in Xcode:
 
@@ -44,33 +44,8 @@ Track your good and bad days at a glance using a simple color-coded calendar and
 
 3.	Build and run the app on a simulator or physical device.
 
-⸻
-
-📂 Project Structure
-
-calendar-tracker/
-├── CalendarView.swift        # Interactive calendar screen
-├── ScoreView.swift           # Summary screen with good day % score
-├── DataStorageManager.swift  # Business logic (device storage and compute score)
-
-⸻
-
-📦 Dependencies
-
-No external dependencies – uses only native Swift and UIKit/SwiftUI.
-
-⸻
-
-🎬 Demo
-
-Add a short video or animated GIF here showcasing the app in action.
-
-⸻
+---
 
 📄 License
 
 This project is licensed under the MIT License.
-
-⸻
-
-If you find this app useful, please ⭐ the repo and share it!
