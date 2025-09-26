@@ -201,6 +201,8 @@ struct CalendarDayView: View {
             return Color.green
         case .red:
             return Color.red
+        case .blue:
+            return Color.blue.opacity(0.8) // Today
         case .gray:
             return Color.gray.opacity(0.6) // Available but not yet marked
         }
@@ -208,7 +210,7 @@ struct CalendarDayView: View {
     
     private var textColor: Color {
         switch storageManager.getColorForDate(date) {
-        case .green, .red:
+        case .green, .red, .blue:
             return Color.white
         case .gray:
             return canInteract ? Color.white : Color.gray

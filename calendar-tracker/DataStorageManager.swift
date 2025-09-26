@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Combine
 
 class DateStorageManager: ObservableObject {
@@ -10,10 +11,54 @@ class DateStorageManager: ObservableObject {
     
     @Published var greenDates: Set<String> = []
     @Published var redDates: Set<String> = []
+    @Published var currentDate = Date()
     
     private init() {
         loadData()
         setInstallDateIfNeeded()
+        setupDayChangeNotifications()
+        refreshCurrentDate() // Check once on init
+    }
+    
+    private func setupDayChangeNotifications() {
+        // Listen for day change notifications (iOS sends this automatically at midnight)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(dayChanged),
+            name: .NSCalendarDayChanged,
+            object: nil
+        )
+        
+        // Listen for when app becomes active (covers app launch, coming from background, etc.)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appBecameActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func dayChanged() {
+        DispatchQueue.main.async {
+            self.refreshCurrentDate()
+        }
+    }
+    
+    @objc private func appBecameActive() {
+        DispatchQueue.main.async {
+            self.refreshCurrentDate()
+        }
+    }
+    
+    private func refreshCurrentDate() {
+        let newDate = Date()
+        if !Calendar.current.isDate(currentDate, inSameDayAs: newDate) {
+            currentDate = newDate
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setInstallDateIfNeeded() {
@@ -69,6 +114,8 @@ class DateStorageManager: ObservableObject {
             return .green
         } else if redDates.contains(dateString) {
             return .red
+        } else if dateString == dateFormatter.string(from: currentDate) {
+            return .blue
         }
         return .gray // Default to gray for untouched dates
     }
@@ -139,5 +186,5 @@ class DateStorageManager: ObservableObject {
 }
 
 enum DateColor {
-    case green, red, gray
+    case green, red, gray, blue
 }
