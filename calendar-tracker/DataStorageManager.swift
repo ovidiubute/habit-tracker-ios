@@ -159,10 +159,16 @@ class DateStorageManager: ObservableObject {
     var totalAvailableDays: Int {
         let calendar = Calendar.current
         let startDate = calendar.startOfDay(for: installDate)
-        let endDate = calendar.startOfDay(for: Date())
+        let endDate = calendar.startOfDay(for: currentDate)
         
         let components = calendar.dateComponents([.day], from: startDate, to: endDate)
-        return max(components.day ?? 0, 0)
+        
+        if (components.day == nil) {
+            return 1
+        } else {
+            // Include current day
+            return components.day! + 1
+        }
     }
     
     // Debug function to print current state
