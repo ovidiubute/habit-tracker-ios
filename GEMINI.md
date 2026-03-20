@@ -16,10 +16,11 @@
 - **`ContentView`**: Uses a `TabView` to switch between the Calendar and Statistics views.
 - **`CalendarView`**: 
     - Manages the grid layout and navigation between months.
-    - Includes `CalendarDayView` for individual date cells.
-    - Implements swipe gestures for month navigation.
+    - Uses nested `VStack/HStack` with stable index-based IDs for the 42-day grid to ensure layout stability during month transitions.
+    - Implements swipe gestures for month navigation with light haptic feedback.
     - Features a clean, dynamic border on the "Today" marker for better visual identification.
     - The border color is dynamic: blue for unmarked, white for marked days to ensure visual harmony.
+    - **Haptic Feedback**: Uses `UIImpactFeedbackGenerator` for satisfying physical interactions during marking and month navigation.
 - **`ScoreView`**: 
     - Calculates and displays performance metrics.
     - Provides a visual breakdown of marked days (Green, Orange, Red).
@@ -47,8 +48,8 @@
 - **Navigation**: Supports both button-based and gesture-based (swipe) month navigation.
 
 ## Project Versioning
-- **Current Version**: 1.1
-- **Current Build**: 2026.03.20
+- **Current Version**: 1.2
+- **Current Build**: 2026.03.20.1
 
 ## File Structure
 - `calendar_trackerApp.swift`: App lifecycle.

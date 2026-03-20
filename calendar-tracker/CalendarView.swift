@@ -38,7 +38,7 @@ struct CalendarView: View {
             .padding(.horizontal)
             
             // Days of week header
-            HStack {
+            HStack(spacing: 8) {
                 ForEach(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], id: \.self) { day in
                     Text(day)
                         .font(.caption)
@@ -50,21 +50,29 @@ struct CalendarView: View {
             .padding(.top, 10)
             
             // Calendar grid with swipe gesture
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                ForEach(calendarDays, id: \.self) { date in
-                    if let date = date {
-                        CalendarDayView(date: date, storageManager: storageManager)
-                    } else {
-                        Rectangle()
-                            .fill(Color.clear)
-                            .frame(height: 40)
+            VStack(spacing: 8) {
+                let days = calendarDays
+                ForEach(0..<6, id: \.self) { week in
+                    HStack(spacing: 8) {
+                        ForEach(0..<7, id: \.self) { day in
+                            let index = week * 7 + day
+                            if let date = days[index] {
+                                CalendarDayView(date: date, storageManager: storageManager)
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                Circle()
+                                    .fill(Color.clear)
+                                    .frame(width: 40, height: 40)
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
                     }
                 }
             }
             .padding(.horizontal)
             .offset(x: dragOffset.width)
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: currentDate)
+            .animation(.none, value: currentDate) // Disable implicit animation for month change to prevent "flying" cells
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -107,6 +115,10 @@ struct CalendarView: View {
         guard !isAnimating else { return }
         
         isAnimating = true
+        
+        // Light haptic feedback for month navigation
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
         
         withAnimation(.easeInOut(duration: 0.3)) {
             if let newDate = calendar.date(byAdding: .month, value: value, to: currentDate) {
@@ -165,6 +177,10 @@ struct CalendarDayView: View {
     var body: some View {
         Button(action: {
             if canInteract {
+                // Haptic feedback for normal tap
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
+                
                 storageManager.toggleDateColor(for: date)
             }
         }) {
@@ -181,6 +197,7 @@ struct CalendarDayView: View {
                 )
         }
         .disabled(!canInteract)
+        .transition(.identity)
     }
     
     private var todayIndicatorColor: Color {
