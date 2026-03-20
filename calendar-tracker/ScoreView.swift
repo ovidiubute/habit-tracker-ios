@@ -32,6 +32,13 @@ struct ScoreView: View {
                 }
                 
                 HStack {
+                    Label("\(orangeDays)", systemImage: "minus.circle.fill")
+                        .foregroundColor(.orange)
+                    Spacer()
+                    Text("Cheat Days")
+                }
+                
+                HStack {
                     Label("\(redDays)", systemImage: "xmark.circle.fill")
                         .foregroundColor(.red)
                     Spacer()
@@ -58,8 +65,8 @@ struct ScoreView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
-            } else if totalMarkedDays < totalAvailableDays {
-                Text("Score is calculated only from days you've marked. Unmarked days don't count against you.")
+            } else {
+                Text("Score is calculated as (Green + Cheat Days) / Total Marked Days. Unmarked days don't count against you.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -85,13 +92,18 @@ struct ScoreView: View {
         return storageManager.greenDates.count
     }
     
+    private var orangeDays: Int {
+        return storageManager.orangeDates.count
+    }
+    
     private var redDays: Int {
         return storageManager.redDates.count
     }
     
     private var scorePercentage: Int {
         guard totalMarkedDays > 0 else { return 0 }
-        let percentage = Double(greenDays) / Double(totalMarkedDays) * 100
+        let successfulDays = Double(greenDays + orangeDays)
+        let percentage = successfulDays / Double(totalMarkedDays) * 100
         return Int(ceil(percentage)) // Round up to nearest whole number
     }
     

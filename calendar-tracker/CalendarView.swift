@@ -173,14 +173,18 @@ struct CalendarDayView: View {
                 .frame(width: 40, height: 40)
                 .background(backgroundColor)
                 .foregroundColor(textColor)
-                .overlay(
-                    // Blue border for today
-                    Circle()
-                        .stroke(isToday ? Color.blue : Color.clear, lineWidth: 2)
-                )
                 .clipShape(Circle())
+                .overlay(
+                    // Sharp border for today to make it stand out
+                    Circle()
+                        .stroke(isToday ? todayIndicatorColor : Color.clear, lineWidth: 2)
+                )
         }
         .disabled(!canInteract)
+    }
+    
+    private var todayIndicatorColor: Color {
+        return storageManager.getColorForDate(date) == .blue ? .blue : .white
     }
     
     private var isToday: Bool {
@@ -199,6 +203,8 @@ struct CalendarDayView: View {
         switch storageManager.getColorForDate(date) {
         case .green:
             return Color.green
+        case .orange:
+            return Color.orange
         case .red:
             return Color.red
         case .blue:
@@ -210,7 +216,7 @@ struct CalendarDayView: View {
     
     private var textColor: Color {
         switch storageManager.getColorForDate(date) {
-        case .green, .red, .blue:
+        case .green, .orange, .red, .blue:
             return Color.white
         case .gray:
             return canInteract ? Color.white : Color.gray

@@ -6,10 +6,12 @@ class DateStorageManager: ObservableObject {
     static let shared = DateStorageManager()
     private let userDefaults = UserDefaults.standard
     private let greenDatesKey = "greenDates"
+    private let orangeDatesKey = "orangeDates"
     private let redDatesKey = "redDates"
     private let installDateKey = "installDate"
     
     @Published var greenDates: Set<String> = []
+    @Published var orangeDates: Set<String> = []
     @Published var redDates: Set<String> = []
     @Published var currentDate = Date()
     
@@ -78,6 +80,9 @@ class DateStorageManager: ObservableObject {
         if let greenDatesArray = userDefaults.array(forKey: greenDatesKey) as? [String] {
             greenDates = Set(greenDatesArray)
         }
+        if let orangeDatesArray = userDefaults.array(forKey: orangeDatesKey) as? [String] {
+            orangeDates = Set(orangeDatesArray)
+        }
         if let redDatesArray = userDefaults.array(forKey: redDatesKey) as? [String] {
             redDates = Set(redDatesArray)
         }
@@ -85,6 +90,7 @@ class DateStorageManager: ObservableObject {
     
     private func saveData() {
         userDefaults.set(Array(greenDates), forKey: greenDatesKey)
+        userDefaults.set(Array(orangeDates), forKey: orangeDatesKey)
         userDefaults.set(Array(redDates), forKey: redDatesKey)
     }
     
@@ -92,8 +98,12 @@ class DateStorageManager: ObservableObject {
         let dateString = dateFormatter.string(from: date)
         
         if greenDates.contains(dateString) {
-            // Green -> Red
+            // Green -> Orange
             greenDates.remove(dateString)
+            orangeDates.insert(dateString)
+        } else if orangeDates.contains(dateString) {
+            // Orange -> Red
+            orangeDates.remove(dateString)
             redDates.insert(dateString)
         } else if redDates.contains(dateString) {
             // Red -> Green
@@ -112,6 +122,8 @@ class DateStorageManager: ObservableObject {
         
         if greenDates.contains(dateString) {
             return .green
+        } else if orangeDates.contains(dateString) {
+            return .orange
         } else if redDates.contains(dateString) {
             return .red
         } else if dateString == dateFormatter.string(from: currentDate) {
@@ -123,31 +135,35 @@ class DateStorageManager: ObservableObject {
     // Check if a date is available for interaction
     func canInteractWithDate(_ date: Date) -> Bool {
         let calendar = Calendar.current
-        let today = Date()
-        let installDate = self.installDate
+        let today = calendar.startOfDay(for: Date())
         
         // Can't interact with future dates (but CAN interact with today)
         if date > today {
             return false
         }
         
-        // Can't interact with dates before install date
-        if date < calendar.startOfDay(for: installDate) {
+        // Allow a 30-day grace period before today
+        guard let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: today) else {
             return false
         }
         
-        // Can interact with dates from install date up to and INCLUDING today
-        return true
+        // Date must be within the last 30 days (or today)
+        return date >= thirtyDaysAgo
     }
     
     // Get all dates that have been explicitly marked (for score calculation)
     var totalMarkedDays: Int {
-        return greenDates.count + redDates.count
+        return greenDates.count + orangeDates.count + redDates.count
     }
     
     // Get count of green days
     var greenDaysCount: Int {
         return greenDates.count
+    }
+    
+    // Get count of orange days
+    var orangeDaysCount: Int {
+        return orangeDates.count
     }
     
     // Get count of red days
@@ -176,10 +192,12 @@ class DateStorageManager: ObservableObject {
         print("=== DEBUG INFO ===")
         print("Install Date: \(installDate)")
         print("Green Dates: \(greenDates)")
+        print("Orange Dates: \(orangeDates)")
         print("Red Dates: \(redDates)")
         print("Total Available Days: \(totalAvailableDays)")
         print("Total Marked Days: \(totalMarkedDays)")
         print("Green Count: \(greenDaysCount)")
+        print("Orange Count: \(orangeDaysCount)")
         print("Red Count: \(redDaysCount)")
         print("==================")
     }
@@ -192,5 +210,5 @@ class DateStorageManager: ObservableObject {
 }
 
 enum DateColor {
-    case green, red, gray, blue
+    case green, orange, red, gray, blue
 }
