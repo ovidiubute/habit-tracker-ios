@@ -213,11 +213,10 @@ struct CalendarDayView: View {
     }
     
     private var backgroundColor: Color {
-        if !canInteract {
-            return Color.gray.opacity(0.3)
-        }
+        let dateColor = storageManager.getColorForDate(date)
         
-        switch storageManager.getColorForDate(date) {
+        // If the date is marked (Green, Orange, or Red), always show its color
+        switch dateColor {
         case .green:
             return Color.green
         case .orange:
@@ -225,17 +224,26 @@ struct CalendarDayView: View {
         case .red:
             return Color.red
         case .blue:
-            return Color.blue.opacity(0.8) // Today
+            // For today (blue), only show blue if it's interactable
+            return canInteract ? Color.blue.opacity(0.8) : Color.gray.opacity(0.3)
         case .gray:
-            return Color.gray.opacity(0.6) // Available but not yet marked
+            // For unmarked dates, use different shades of gray based on interactability
+            return canInteract ? Color.gray.opacity(0.6) : Color.gray.opacity(0.3)
         }
     }
     
     private var textColor: Color {
-        switch storageManager.getColorForDate(date) {
-        case .green, .orange, .red, .blue:
+        let dateColor = storageManager.getColorForDate(date)
+        
+        switch dateColor {
+        case .green, .orange, .red:
+            // Always white for marked dates
             return Color.white
+        case .blue:
+            // White if interactable today, otherwise grayed out
+            return canInteract ? Color.white : Color.gray
         case .gray:
+            // White if interactable, otherwise grayed out
             return canInteract ? Color.white : Color.gray
         }
     }
