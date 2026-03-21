@@ -42,15 +42,15 @@
     - **Gray**: Unmarked available date or future date.
 
 ## Development Constraints & Logic
-- **Interactable Dates**: Users can mark dates up to 30 days in the past (30-day grace period). Future dates remain locked.
-- **Historical Visibility**: Marked dates (Green, Orange, Red) retain their colors indefinitely, even after the 30-day interaction grace period has passed. Unmarked historical dates are visually grayed out.
+- **Interactable Dates**: Users can mark any current or past dates. Future dates remain locked.
+- **Historical Visibility**: Marked dates (Green, Orange, Red) retain their colors indefinitely. Unmarked historical dates are visually grayed out.
 - **Toggle Cycle**: Tapping an available day cycles through: Green -> Orange -> Red -> Green.
 - **Score Calculation**: `((Green Days + Orange Days) / Total Marked Days) * 100`. Unmarked days within the available range do not count towards the score.
 - **Navigation**: Supports both button-based and gesture-based (swipe) month navigation.
 
 ## Project Versioning
-- **Current Version**: 1.2.1
-- **Current Build**: 2026.03.20.2
+- **Current Version**: 1.2.2
+- **Current Build**: 2026.03.21.1
 
 ## File Structure
 - `calendar_trackerApp.swift`: App lifecycle.

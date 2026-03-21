@@ -137,18 +137,8 @@ class DateStorageManager: ObservableObject {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         
-        // Can't interact with future dates (but CAN interact with today)
-        if date > today {
-            return false
-        }
-        
-        // Allow a 30-day grace period before today
-        guard let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: today) else {
-            return false
-        }
-        
-        // Date must be within the last 30 days (or today)
-        return date >= thirtyDaysAgo
+        // Can't interact with future dates (but CAN interact with today and all past dates)
+        return date <= today
     }
     
     // Get all dates that have been explicitly marked (for score calculation)
@@ -171,10 +161,17 @@ class DateStorageManager: ObservableObject {
         return redDates.count
     }
     
-    // Get total days that have become available for marking since install
+    // Get total days that have become available for marking
     var totalAvailableDays: Int {
         let calendar = Calendar.current
-        let startDate = calendar.startOfDay(for: installDate)
+        
+        // Find the earliest date ever marked
+        let allMarkedDatesStrings = greenDates.union(orangeDates).union(redDates)
+        let allMarkedDates = allMarkedDatesStrings.compactMap { dateFormatter.date(from: $0) }
+        let earliestMarked = allMarkedDates.min() ?? installDate
+        
+        // The start date is either the install date or the earliest marked date, whichever is earlier
+        let startDate = calendar.startOfDay(for: min(installDate, earliestMarked))
         let endDate = calendar.startOfDay(for: currentDate)
         
         let components = calendar.dateComponents([.day], from: startDate, to: endDate)
@@ -185,6 +182,22 @@ class DateStorageManager: ObservableObject {
             // Include current day
             return components.day! + 1
         }
+    }
+    
+    // Generate CSV data for export
+    func generateCSVData() -> String {
+        var csvString = "Date,Status\n"
+        
+        let allDates = (greenDates.map { ($0, "Success") } + 
+                        orangeDates.map { ($0, "Cheat Day") } + 
+                        redDates.map { ($0, "Failure") })
+            .sorted { $0.0 < $1.0 }
+        
+        for (date, status) in allDates {
+            csvString += "\(date),\(status)\n"
+        }
+        
+        return csvString
     }
     
     // Debug function to print current state
@@ -202,11 +215,11 @@ class DateStorageManager: ObservableObject {
         print("==================")
     }
     
-    private var dateFormatter: DateFormatter {
+    private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
-    }
+    }()
 }
 
 enum DateColor {
